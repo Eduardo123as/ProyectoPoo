@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 NeoWeather</title>
+    <style>
+        /* Estilos CSS futuristas */
+        body {
+            background: linear-gradient(135deg, #0a0a0a, #1e3c72);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 90%;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        input, button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        input {
+            width: 70%;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        button {
+            background-color: #00ffcc;
+            color: black;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #00997a;
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .weather-image {
+            border-radius: 10px;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 4px 10px rgba(0, 255, 204, 0.5);
+            margin-top: 10px;
+            width: 100%;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌌 NeoWeather</h1>
+        <p>Ingrese una ciudad para escanear su atmósfera:</p>
+        
+        <form method="POST" class="search-form">
+            <input type="text" id="city" name="city" placeholder="Ingresa el nombre de la ciudad..." required>
+            <button type="submit">Escanear Atmósfera</button>
+        </form>
+
+        {% if weather_data %}
+        <div class="weather-card">
+            <h2>{{ city }}</h2>
+            <p class="temperature">{{ weather_data['main']['temp'] }}°C</p>
+            <p class="description">{{ weather_data['weather'][0]['description'] }}</p>
+            <p>Humedad: {{ weather_data['main']['humidity'] }}%</p>
+            <p>Viento: {{ weather_data['wind']['speed'] }} m/s</p>
+            <p>Presión: {{ weather_data['main']['pressure'] }} hPa</p>
+
+            <button onclick="verImagen()">🔍 Ver Dibujo del Clima</button>
+            <img id="weatherImage" class="weather-image hidden" src="{{ url_for('weather_image', city=city) }}" alt="Visualización del Clima">
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function verImagen() {
+            const image = document.getElementById("weatherImage");
+            image.classList.toggle("hidden");
+        }
+    </script>
+</body>
+</html>

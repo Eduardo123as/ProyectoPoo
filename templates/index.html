@@ -69,26 +69,24 @@
             animation: fadeIn 1s ease-in-out;
         }
 
+        /* Espaciado entre párrafos para evitar solapamientos */
+        .weather-card p {
+            margin-bottom: 15px;
+        }
+
         .weather-image {
             border-radius: 10px;
             border: 2px solid #00ffcc;
             box-shadow: 0 4px 10px rgba(0, 255, 204, 0.5);
-            margin-top: 10px;
+            margin-top: 20px; /* Aumentado para mayor separación */
             width: 100%;
             animation: fadeIn 1s ease-in-out;
-        }
-
-        .hidden {
-            display: none;
+            display: block;
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
@@ -110,18 +108,11 @@
             <p>Humedad: {{ weather_data['main']['humidity'] }}%</p>
             <p>Viento: {{ weather_data['wind']['speed'] }} m/s</p>
             <p>Presión: {{ weather_data['main']['pressure'] }} hPa</p>
-
-            <button onclick="verImagen()">🔍 Ver Dibujo del Clima</button>
-            <img id="weatherImage" class="weather-image hidden" src="{{ url_for('weather_image', city=city) }}" alt="Visualización del Clima">
+            <!-- Se agrega un parámetro de timestamp para evitar problemas de caché -->
+            <img class="weather-image" src="{{ url_for('weather_image', city=city) }}?t={{ time.time() }}" alt="Visualización del Clima">
         </div>
         {% endif %}
     </div>
-
-    <script>
-        function verImagen() {
-            const image = document.getElementById("weatherImage");
-            image.classList.toggle("hidden");
-        }
-    </script>
 </body>
 </html>
+

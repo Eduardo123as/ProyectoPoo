@@ -6,11 +6,12 @@ from wand.image import Image
 from wand.drawing import Drawing
 from wand.color import Color
 from io import BytesIO
+import time
+import math  # Se utiliza para calcular los rayos del sol
 
 load_dotenv()
 
 app = Flask(__name__)
-
 api_key = os.getenv('API_KEY')
 
 def get_weather(api_key, city):
@@ -26,64 +27,85 @@ def get_weather(api_key, city):
 def draw_weather(weather_data):
     city = weather_data['name']
     temp = weather_data['main']['temp']
-    weather = weather_data['weather'][0]['main'].lower()  # Condición climática (nubes, lluvia, etc.)
+    weather = weather_data['weather'][0]['main'].lower()
     description = weather_data['weather'][0]['description']
 
-    # Crear una imagen en memoria
     with Image(width=600, height=400, background=Color('#87CEEB')) as img:
         with Drawing() as draw:
-            # Dibujar el fondo (cielo)
-            draw.fill_color = Color('#87CEEB')  # Azul cielo
-            draw.rectangle(left=0, top=0, width=600, height=400)
-
-            # Dibujar el suelo
-            draw.fill_color = Color('#32CD32')  # Verde pasto
-            draw.rectangle(left=0, top=300, width=600, height=400)
-
-            # Dibujar una representación visual del clima
-            if 'cloud' in weather:
-                # Dibujar nubes
+            # Dibuja el suelo (pasto)
+            draw.fill_color = Color('#32CD32')
+            draw.rectangle(left=0, top=300, width=600, height=100)
+            
+            if 'clear' in weather:
+                # Dibuja un sol con rayos para un día despejado
+                draw.fill_color = Color('#FFD700')
+                # Sol: círculo con centro en (500,100) y radio 50
+                draw.circle((500, 100), (550, 100))
+                # Rayos del sol
+                draw.stroke_color = Color('#FFD700')
+                draw.stroke_width = 4
+                for angle in range(0, 360, 30):
+                    rad = math.radians(angle)
+                    x_end = 500 + math.cos(rad) * 70
+                    y_end = 100 + math.sin(rad) * 70
+                    draw.line((500, 100), (x_end, y_end))
+            elif 'cloud' in weather:
+                # Dibuja nubes con elipses superpuestas para mayor suavidad
                 draw.fill_color = Color('white')
-                draw.circle((150, 150), (100, 120))  # Nube 1
-                draw.circle((250, 150), (200, 140))  # Nube 2
-                draw.circle((350, 150), (300, 130))  # Nube 3
+                draw.ellipse((150, 100), (60, 40))
+                draw.ellipse((220, 90), (70, 50))
+                draw.ellipse((290, 100), (60, 40))
             elif 'rain' in weather:
-                # Dibujar lluvia
-                draw.fill_color = Color('#ADD8E6')  # Azul claro
-                for i in range(10):
-                    draw.rectangle(left=100 + i * 50, top=200, width=110 + i * 50, height=220)  # Gotas de lluvia
-            elif 'clear' in weather:
-                # Dibujar un sol
-                draw.fill_color = Color('#FFD700')  # Amarillo dorado
-                draw.circle((300, 100), (250, 50))  # Sol
+                # Dibuja nubes grises y líneas inclinadas para simular lluvia
+                draw.fill_color = Color('gray')
+                draw.ellipse((200, 100), (80, 50))
+                draw.ellipse((300, 80), (90, 60))
+                draw.ellipse((400, 100), (80, 50))
+                # Dibuja gotas de lluvia
+                draw.stroke_color = Color('#ADD8E6')
+                draw.stroke_width = 3
+                for x in range(210, 400, 20):
+                    draw.line((x, 140), (x - 10, 160))
             elif 'snow' in weather:
-                # Dibujar nieve
-                draw.fill_color = Color('white')
-                for i in range(10):
-                    draw.circle((100 + i * 50, 200), (90 + i * 50, 190))  # Copos de nieve
+                # Dibuja nubes en tonos claros y pequeños copos de nieve
+                draw.fill_color = Color('lightgray')
+                draw.ellipse((250, 100), (80, 50))
+                draw.ellipse((350, 80), (90, 60))
+                draw.ellipse((450, 100), (80, 50))
+                # Dibuja copos de nieve como pequeñas cruces
+                draw.stroke_color = Color('white')
+                draw.stroke_width = 2
+                for x in range(260, 460, 30):
+                    for y in range(140, 180, 20):
+                        draw.line((x - 5, y - 5), (x + 5, y + 5))
+                        draw.line((x - 5, y + 5), (x + 5, y - 5))
             elif 'thunderstorm' in weather:
-                # Dibujar una tormenta eléctrica
-                draw.fill_color = Color('#808080')  # Gris
-                draw.rectangle(left=100, top=100, width=500, height=200)  # Nube de tormenta
-                draw.fill_color = Color('#FFFF00')  # Amarillo
-                draw.rectangle(left=200, top=150, width=210, height=250)  # Rayo
+                # Dibuja nubes oscuras y un rayo para tormenta
+                draw.fill_color = Color('darkgray')
+                draw.ellipse((200, 100), (80, 50))
+                draw.ellipse((300, 80), (90, 60))
+                draw.ellipse((400, 100), (80, 50))
+                # Dibuja un rayo como polígono
+                draw.fill_color = Color('#FFFF00')
+                lightning_points = "300,120 320,150 290,150 310,180"
+                draw.polygon(points=lightning_points)
             else:
-                # Dibujar un icono genérico (termómetro)
+                # Caso por defecto: una forma abstracta
                 draw.fill_color = Color('red')
-                draw.rectangle(left=250, top=150, width=270, height=300)  # Termómetro
+                draw.rectangle(left=250, top=150, width=270, height=300)
 
-            # Dibujar el texto
+            # Dibuja la información textual en la imagen
             draw.font_size = 24
             draw.fill_color = Color('black')
-            draw.text(50, 30, f"City: {city}")
-            draw.text(50, 70, f"Temperature: {temp}°C")
-            draw.text(50, 110, f"Weather: {description}")
+            draw.text(20, 30, f"City: {city}")
+            draw.text(20, 60, f"Temp: {temp}°C")
+            draw.text(20, 90, f"Weather: {description}")
 
             draw(img)
 
-        # Convertir la imagen a un formato PNG
+        img.format = 'png'
         img_buffer = BytesIO()
-        img.save(file=img_buffer, format='png')
+        img.save(file=img_buffer)
         img_buffer.seek(0)
         return img_buffer
 
@@ -100,8 +122,7 @@ def index():
     if request.method == 'POST':
         city = request.form['city']
         weather_data = get_weather(api_key, city)
-    return render_template('index.html', weather_data=weather_data, city=city)
+    return render_template('index.html', weather_data=weather_data, city=city, time=time)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
